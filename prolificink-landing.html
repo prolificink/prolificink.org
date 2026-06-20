@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prolific Ink — The Operating Layer for Serious Artists</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #0A0A0A;
+    --gold: #C9A84C;
+    --gold-dim: #8a6e2e;
+    --bone: #F5F0E8;
+    --bone-dim: #c8c2b6;
+    --mid: #1a1a1a;
+    --border: rgba(201,168,76,0.18);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--ink);
+    color: var(--bone);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.6;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 0 48px;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(201,168,76,0.12);
+    background: rgba(10,10,10,0.92);
+    backdrop-filter: blur(12px);
+  }
+
+  .nav-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 0.12em;
+    color: var(--gold);
+    text-decoration: none;
+  }
+
+  .nav-logo span { color: var(--bone-dim); font-size: 11px; font-family: 'DM Sans', sans-serif; font-weight: 300; letter-spacing: 0.2em; display: block; text-transform: uppercase; margin-top: -4px; }
+
+  nav ul {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 40px;
+  }
+
+  nav ul a {
+    text-decoration: none;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--bone-dim);
+    transition: color 0.2s;
+  }
+
+  nav ul a:hover { color: var(--gold); }
+
+  .nav-cta {
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold) !important;
+    padding: 10px 24px;
+    font-size: 11px !important;
+    letter-spacing: 0.16em !important;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s !important;
+    text-decoration: none;
+  }
+
+  .nav-cta:hover {
+    background: var(--gold) !important;
+    color: var(--ink) !important;
+  }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 0 48px 80px;
+    padding-top: 120px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-rule {
+    width: 64px;
+    height: 2px;
+    background: var(--gold);
+    margin-bottom: 32px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.2s forwards;
+  }
+
+  .hero-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 24px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.3s forwards;
+  }
+
+  .hero-headline {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(72px, 10vw, 148px);
+    line-height: 0.92;
+    letter-spacing: 0.02em;
+    color: var(--bone);
+    max-width: 900px;
+    opacity: 0;
+    animation: fadeUp 1s ease 0.4s forwards;
+  }
+
+  .hero-headline .gold { color: var(--gold); }
+
+  .hero-sub {
+    margin-top: 40px;
+    max-width: 520px;
+    font-size: 17px;
+    line-height: 1.75;
+    color: var(--bone-dim);
+    font-weight: 300;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.7s forwards;
+  }
+
+  .hero-actions {
+    margin-top: 48px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.9s forwards;
+  }
+
+  .btn-primary {
+    background: var(--gold);
+    color: var(--ink);
+    border: none;
+    padding: 16px 40px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.15s;
+    display: inline-block;
+  }
+
+  .btn-primary:hover { background: #e0bc5a; transform: translateY(-1px); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--bone-dim);
+    border: none;
+    padding: 16px 0;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  .btn-ghost:hover { color: var(--bone); border-color: var(--bone-dim); }
+
+  /* vertical text */
+  .hero-vertical {
+    position: absolute;
+    right: 48px;
+    bottom: 80px;
+    writing-mode: vertical-rl;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    opacity: 0;
+    animation: fadeIn 1s ease 1.4s forwards;
+  }
+
+  /* DIVIDER */
+  .section-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+    margin: 0 48px;
+    opacity: 0.35;
+  }
+
+  /* SECTIONS */
+  section { padding: 120px 48px; }
+
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 56px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .section-label::before {
+    content: '';
+    display: inline-block;
+    width: 32px;
+    height: 1px;
+    background: var(--gold);
+  }
+
+  /* THE LEAK */
+  .leak-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: start;
+  }
+
+  .leak-headline {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(52px, 6vw, 88px);
+    line-height: 0.95;
+    letter-spacing: 0.02em;
+    color: var(--bone);
+  }
+
+  .leak-headline .gold { color: var(--gold); }
+
+  .leak-counter {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(64px, 8vw, 120px);
+    color: var(--gold);
+    line-height: 1;
+    letter-spacing: 0.02em;
+    margin-bottom: 8px;
+  }
+
+  .leak-counter-label {
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--bone-dim);
+    margin-bottom: 40px;
+  }
+
+  .leak-items {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .leak-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 20px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    font-size: 14px;
+    color: var(--bone-dim);
+    line-height: 1.5;
+  }
+
+  .leak-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    color: var(--gold);
+    letter-spacing: 0.1em;
+    flex-shrink: 0;
+    padding-top: 2px;
+  }
+
+  /* WHAT IT IS */
+  .what-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .what-row {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 48px;
+    padding: 36px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    align-items: start;
+  }
+
+  .what-label {
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  .what-label.negative { color: #6b3333; }
+  .what-label.positive { color: var(--gold); }
+
+  .what-text {
+    font-size: 17px;
+    line-height: 1.65;
+    color: var(--bone-dim);
+    font-weight: 300;
+  }
+
+  .what-text strong { color: var(--bone); font-weight: 500; }
+
+  /* HOW IT WORKS */
+  .how-steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2px;
+    margin-top: 0;
+  }
+
+  .how-step {
+    background: var(--mid);
+    padding: 40px 32px;
+    position: relative;
+  }
+
+  .how-step::before {
+    content: attr(data-num);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 64px;
+    color: rgba(201,168,76,0.1);
+    position: absolute;
+    top: 16px; right: 20px;
+    line-height: 1;
+    letter-spacing: 0.02em;
+  }
+
+  .how-step-icon {
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+  }
+
+  .how-step-icon svg { width: 18px; height: 18px; stroke: var(--gold); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+
+  .how-step h3 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--bone);
+    margin-bottom: 12px;
+  }
+
+  .how-step p {
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--bone-dim);
+    font-weight: 300;
+  }
+
+  /* TIERS */
+  .tiers-intro {
+    max-width: 600px;
+    margin-bottom: 80px;
+  }
+
+  .tiers-intro h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(48px, 5vw, 72px);
+    line-height: 0.95;
+    color: var(--bone);
+    margin-bottom: 24px;
+  }
+
+  .tiers-intro p {
+    font-size: 16px;
+    color: var(--bone-dim);
+    font-weight: 300;
+    line-height: 1.7;
+  }
+
+  .tiers-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+  }
+
+  .tier-card {
+    background: var(--mid);
+    padding: 48px 40px;
+    position: relative;
+    border-top: 2px solid transparent;
+    transition: border-color 0.3s;
+  }
+
+  .tier-card:hover { border-top-color: var(--gold-dim); }
+  .tier-card.featured { border-top-color: var(--gold); background: #141410; }
+
+  .tier-badge {
+    display: inline-block;
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: var(--gold);
+    padding: 4px 10px;
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+
+  .tier-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 42px;
+    letter-spacing: 0.05em;
+    color: var(--bone);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .tier-price {
+    font-size: 13px;
+    color: var(--gold);
+    letter-spacing: 0.1em;
+    margin-bottom: 32px;
+    font-weight: 500;
+  }
+
+  .tier-state {
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--bone-dim);
+    margin-bottom: 16px;
+    font-weight: 600;
+  }
+
+  .tier-desc {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--bone-dim);
+    font-weight: 300;
+    margin-bottom: 40px;
+  }
+
+  .tier-features {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .tier-features li {
+    font-size: 13px;
+    color: var(--bone-dim);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    line-height: 1.5;
+  }
+
+  .tier-features li::before {
+    content: '—';
+    color: var(--gold);
+    flex-shrink: 0;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  /* MARQUEE */
+  .marquee-section {
+    padding: 0;
+    overflow: hidden;
+    border-top: 1px solid rgba(201,168,76,0.12);
+    border-bottom: 1px solid rgba(201,168,76,0.12);
+    background: #0d0d0b;
+  }
+
+  .marquee-track {
+    display: flex;
+    white-space: nowrap;
+    animation: marquee 40s linear infinite;
+    padding: 28px 0;
+  }
+
+  .marquee-track:hover { animation-play-state: paused; }
+
+  .marquee-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 32px;
+    padding: 0 32px;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    color: var(--bone-dim);
+    text-transform: uppercase;
+    font-weight: 300;
+  }
+
+  .marquee-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--gold);
+    flex-shrink: 0;
+  }
+
+  /* MANIFESTO */
+  .manifesto {
+    text-align: center;
+    padding: 160px 48px;
+    background: #0d0d0b;
+    position: relative;
+  }
+
+  .manifesto::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 1px;
+    height: 60%;
+    background: linear-gradient(180deg, transparent, rgba(201,168,76,0.15), transparent);
+  }
+
+  .manifesto blockquote {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(36px, 5vw, 64px);
+    line-height: 1.1;
+    color: var(--bone);
+    max-width: 900px;
+    margin: 0 auto 32px;
+    letter-spacing: 0.02em;
+  }
+
+  .manifesto blockquote .gold { color: var(--gold); }
+
+  .manifesto cite {
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    font-style: normal;
+  }
+
+  /* FINAL CTA */
+  .cta-section {
+    text-align: center;
+    padding: 160px 48px;
+    position: relative;
+  }
+
+  .cta-label {
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 32px;
+  }
+
+  .cta-headline {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(56px, 8vw, 112px);
+    line-height: 0.92;
+    color: var(--bone);
+    margin-bottom: 48px;
+    letter-spacing: 0.02em;
+  }
+
+  .cta-sub {
+    font-size: 16px;
+    color: var(--bone-dim);
+    font-weight: 300;
+    max-width: 480px;
+    margin: 0 auto 56px;
+    line-height: 1.75;
+  }
+
+  .cta-fine {
+    margin-top: 32px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.2);
+    letter-spacing: 0.1em;
+  }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid rgba(201,168,76,0.12);
+    padding: 48px 48px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 40px;
+    align-items: center;
+  }
+
+  .footer-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 0.12em;
+    color: var(--gold);
+  }
+
+  .footer-logo small {
+    display: block;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--gold-dim);
+    text-transform: uppercase;
+    margin-top: 4px;
+    font-weight: 300;
+  }
+
+  .footer-links {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .footer-links a {
+    font-size: 12px;
+    color: rgba(255,255,255,0.3);
+    text-decoration: none;
+    letter-spacing: 0.1em;
+    transition: color 0.2s;
+  }
+
+  .footer-links a:hover { color: var(--bone-dim); }
+
+  .footer-right {
+    text-align: right;
+    font-size: 11px;
+    color: rgba(255,255,255,0.2);
+    line-height: 1.8;
+    letter-spacing: 0.05em;
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  /* SCROLL REVEAL */
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    nav { padding: 0 24px; }
+    nav ul { display: none; }
+    section { padding: 80px 24px; }
+    .hero { padding: 120px 24px 60px; }
+    .leak-grid { grid-template-columns: 1fr; gap: 48px; }
+    .how-steps { grid-template-columns: 1fr 1fr; }
+    .tiers-grid { grid-template-columns: 1fr; }
+    footer { grid-template-columns: 1fr; gap: 24px; }
+    .footer-right { text-align: left; }
+    .section-divider { margin: 0 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">
+    Prolific Ink
+    <span>Operating Infrastructure</span>
+  </a>
+  <ul>
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#tiers">Tiers</a></li>
+    <li><a href="#apply" class="nav-cta">Apply Now</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-rule"></div>
+  <p class="hero-eyebrow">AI-Managed Tattoo Studio Infrastructure</p>
+  <h1 class="hero-headline">
+    The Artist<br>Should Be<br><span class="gold">Tattooing.</span>
+  </h1>
+  <p class="hero-sub">
+    The system should handle everything else. Intake. Deposits. Confirmations. No-show recovery. 24 hours a day. Every day.
+  </p>
+  <div class="hero-actions">
+    <a href="#apply" class="btn-primary">Install the System</a>
+    <a href="#how" class="btn-ghost">See How It Works →</a>
+  </div>
+  <span class="hero-vertical">Prolific Ink — West Covina, CA</span>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- THE LEAK -->
+<section>
+  <div class="section-label">The Operational Leak</div>
+  <div class="leak-grid">
+    <div>
+      <h2 class="leak-headline reveal">
+        The Artist<br>Was Never<br>The <span class="gold">Problem.</span><br>The Infrastructure Was.
+      </h2>
+    </div>
+    <div class="reveal">
+      <div class="leak-counter" id="counter">$0</div>
+      <p class="leak-counter-label">Lost per year to broken infrastructure</p>
+      <ul class="leak-items">
+        <li class="leak-item">
+          <span class="leak-num">01</span>
+          <span>The DM that came in at 1AM got no response until 10AM — after they booked someone else</span>
+        </li>
+        <li class="leak-item">
+          <span class="leak-num">02</span>
+          <span>The deposit that was never sent because the follow-up was never handled</span>
+        </li>
+        <li class="leak-item">
+          <span class="leak-num">03</span>
+          <span>The no-show that cost $400 because there was no confirmation sequence</span>
+        </li>
+        <li class="leak-item">
+          <span class="leak-num">04</span>
+          <span>The qualified lead who went cold because the reply took 36 hours</span>
+        </li>
+        <li class="leak-item">
+          <span class="leak-num">05</span>
+          <span>The artist answering booking questions between sessions — while tattooing</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- WHAT IT IS -->
+<section>
+  <div class="section-label">What Prolific Ink Is</div>
+  <div class="what-grid reveal">
+    <div class="what-row">
+      <span class="what-label negative">Not Software</span>
+      <p class="what-text">Software sits on a shelf until you use it. <strong>Prolific Ink runs whether you are looking at it or not.</strong> It is infrastructure. It is always on.</p>
+    </div>
+    <div class="what-row">
+      <span class="what-label negative">Not a Chatbot</span>
+      <p class="what-text">A chatbot answers questions. <strong>Prolific Ink qualifies clients, collects deposits, confirms appointments, and recovers no-shows.</strong> That is a different function entirely.</p>
+    </div>
+    <div class="what-row">
+      <span class="what-label negative">Not an App</span>
+      <p class="what-text">Artists do not need another app to manage. <strong>They need a system that manages itself.</strong> Prolific Ink is the layer that runs underneath — visible only in results.</p>
+    </div>
+    <div class="what-row">
+      <span class="what-label positive">What It Is</span>
+      <p class="what-text"><strong>The booking desk that never closes. The front office that never calls in sick.</strong> The operating system that treats every inquiry with the level of precision your reputation demands.</p>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="section-label">How the Operating Layer Works</div>
+  <div class="how-steps">
+    <div class="how-step reveal" data-num="01">
+      <div class="how-step-icon">
+        <svg viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+      </div>
+      <h3>Intake</h3>
+      <p>Every inquiry is captured and responded to — at 1AM or 1PM. No lead waits. No DM goes cold. The intake process qualifies clients before they reach the calendar.</p>
+    </div>
+    <div class="how-step reveal" data-num="02">
+      <div class="how-step-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <h3>Deposit</h3>
+      <p>The deposit request goes out automatically. The payment link is clean and professional. The client does not wait. The deposit proves intent. Intent protects your time.</p>
+    </div>
+    <div class="how-step reveal" data-num="03">
+      <div class="how-step-icon">
+        <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+      </div>
+      <h3>Confirmation</h3>
+      <p>Every appointment gets a confirmation sequence. The client is reminded. The details are confirmed. The no-show rate drops. This is not luck — it is infrastructure.</p>
+    </div>
+    <div class="how-step reveal" data-num="04">
+      <div class="how-step-icon">
+        <svg viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+      </div>
+      <h3>Recovery</h3>
+      <p>When a no-show occurs, the system attempts recovery. A replacement inquiry is prioritized. The chair does not stay empty while the artist handles the situation manually.</p>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-section">
+  <div class="marquee-track" id="marquee">
+    <span class="marquee-item"><span class="marquee-dot"></span>Your art gets them interested. Your system gets them booked.</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Every hour in the DMs is an hour not spent in the chair.</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>The no-show is not bad luck. It is what happens when there is no confirmation system.</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>The client judges the booking process before they ever see your portfolio.</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>A system that runs without you is not a replacement for you. It is a protection of you.</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Serious artists deserve serious infrastructure.</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Your art gets them interested. Your system gets them booked.</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Every hour in the DMs is an hour not spent in the chair.</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>The no-show is not bad luck. It is what happens when there is no confirmation system.</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>The client judges the booking process before they ever see your portfolio.</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>A system that runs without you is not a replacement for you. It is a protection of you.</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Serious artists deserve serious infrastructure.</span>
+  </div>
+</div>
+
+<!-- TIERS -->
+<section id="tiers">
+  <div class="tiers-intro reveal">
+    <div class="section-label">Operational Tiers</div>
+    <h2>The System Is Not a Feature Package.<br>It Is an <span style="color:var(--gold)">Operational State.</span></h2>
+    <p style="margin-top:24px">Tiers describe the level at which your studio operates — not the features you unlock. Understand what changes before you see what it costs.</p>
+  </div>
+  <div class="tiers-grid">
+    <div class="tier-card reveal">
+      <div class="tier-name">Bronze</div>
+      <div class="tier-price">$350 + 8%</div>
+      <div class="tier-state">Operational State</div>
+      <p class="tier-desc">The system stops the bleeding. The studio stops losing leads to slow responses and unprotected time.</p>
+      <ul class="tier-features">
+        <li>Intake management — every inquiry captured and responded to</li>
+        <li>Deposit collection — automated request and follow-up</li>
+        <li>Appointment confirmation sequence</li>
+        <li>Basic no-show recovery</li>
+        <li>24/7 inbox coverage</li>
+      </ul>
+    </div>
+    <div class="tier-card featured reveal">
+      <span class="tier-badge">Most Installed</span>
+      <div class="tier-name">Silver</div>
+      <div class="tier-price">$700 + 8%</div>
+      <div class="tier-state">Operational State</div>
+      <p class="tier-desc">The system starts working toward the future. The studio has a booking engine and a content direction that compounds over time.</p>
+      <ul class="tier-features">
+        <li>Everything in Bronze</li>
+        <li>Growth intelligence and trend research</li>
+        <li>Content briefs and platform strategy</li>
+        <li>Cohort targeting and lead qualification</li>
+        <li>Performance reporting</li>
+      </ul>
+    </div>
+    <div class="tier-card reveal">
+      <div class="tier-name">Gold</div>
+      <div class="tier-price">$1,000 + 8%</div>
+      <div class="tier-state">Operational State</div>
+      <p class="tier-desc">The studio operates at the level most studios aspire to. Every client touchpoint feels as premium as the work that follows it.</p>
+      <ul class="tier-features">
+        <li>Everything in Silver</li>
+        <li>Local authority and review strategy</li>
+        <li>Cinematic content direction</li>
+        <li>Full media operating layer</li>
+        <li>Brand infrastructure for long-term positioning</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- MANIFESTO -->
+<div class="manifesto">
+  <blockquote class="reveal">
+    "The enemy is not the competition.<br>The enemy is every hour an artist spends<br>doing work the <span class="gold">system should have handled.</span>"
+  </blockquote>
+  <cite>— Derrick Valerio, Founder</cite>
+</div>
+
+<!-- FINAL CTA -->
+<section class="cta-section" id="apply">
+  <p class="cta-label reveal">Ready to install the system</p>
+  <h2 class="cta-headline reveal">
+    Protect the Art.<br>Own Your Time.
+  </h2>
+  <p class="cta-sub reveal">
+    You built the reputation. We protect it every time someone sends a DM. The booking desk that never closes starts here.
+  </p>
+  <div class="reveal">
+    <a href="mailto:support@prolificink.com" class="btn-primary">Apply for Access</a>
+  </div>
+  <p class="cta-fine reveal">Prolific Ink does not chase. The right artist recognizes themselves in the diagnosis.</p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <div class="footer-logo">
+      Prolific Ink
+      <small>West Covina, CA</small>
+    </div>
+  </div>
+  <div class="footer-links">
+    <a href="/privacy-policy">Privacy Policy</a>
+    <a href="/terms-of-service">Terms of Service</a>
+    <a href="/sms-policy">SMS Policy</a>
+    <a href="mailto:support@prolificink.com">support@prolificink.com</a>
+    <a href="tel:6266251066">(626) 625-1066</a>
+  </div>
+  <div class="footer-right">
+    © 2026 Prolific Ink<br>
+    2203 E Alaska St, West Covina CA 91791<br>
+    <br>
+    Protect the Art. Own Your Time.<br>Respect Your Passion.
+  </div>
+</footer>
+
+<script>
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => entry.target.classList.add('visible'), i * 80);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+  reveals.forEach(el => observer.observe(el));
+
+  // Counter animation
+  const counterEl = document.getElementById('counter');
+  const target = 32500;
+  let started = false;
+
+  const counterObserver = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting && !started) {
+      started = true;
+      let current = 0;
+      const duration = 2000;
+      const start = performance.now();
+      const step = (now) => {
+        const elapsed = now - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3);
+        current = Math.round(ease * target);
+        counterEl.textContent = '$' + current.toLocaleString();
+        if (progress < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }
+  }, { threshold: 0.5 });
+  counterObserver.observe(counterEl);
+
+  // Nav shrink on scroll
+  const nav = document.querySelector('nav');
+  window.addEventListener('scroll', () => {
+    nav.style.height = window.scrollY > 60 ? '56px' : '72px';
+    nav.style.transition = 'height 0.3s ease';
+  });
+</script>
+</body>
+</html>
